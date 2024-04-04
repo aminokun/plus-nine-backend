@@ -15,7 +15,8 @@ builder.Services.AddCors(options => {
     // React
     options.AddPolicy("reactapp", policyBuilder =>
     {
-        policyBuilder.WithOrigins(allowedOrigins);
+        //policyBuilder.WithOrigins(allowedOrigins);
+        policyBuilder.AllowAnyOrigin();
         policyBuilder.AllowAnyHeader();
         policyBuilder.AllowAnyMethod();
         policyBuilder.AllowCredentials();
@@ -35,11 +36,8 @@ builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
-if (app.Environment.IsDevelopment())
-{
-    app.UseSwagger();
-    app.UseSwaggerUI();
-}
+app.UseSwagger();
+app.UseSwaggerUI();
 
 app.UseHttpsRedirection();
 
