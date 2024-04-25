@@ -12,7 +12,7 @@ on:
 jobs:
   build:
 
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
 
     steps:
     - uses: actions/checkout@v4
@@ -26,3 +26,19 @@ jobs:
       run: dotnet build --no-restore
     - name: Test
       run: dotnet test --no-build --verbosity normal
+    - name: CD to DiscordBot Directory
+      run: cd ~/plus-nine-backend
+    - name: Change branch
+      run: git checkout main
+    - name: Pull changes
+      run: git pull
+    - name: Stop current docker container
+      run: docker stop web-api-plusnine
+    - name: Delete current docker container
+      run: docker rm web-api-plusnine
+    - name: Remove current DiscordBot Image
+      run: docker rmi --force web-api-plusnine
+    - name: Build the Docker image
+      run: docker build --rm -t web-api-plusnine .
+    - name: Run Docker container
+      run: docker run -p 5000:5000 -p 5001:5001 -e ASPNETCORE_HTTP_PORT=https://+:5001 -e ASPNETCORE_URLS=http://+:5000 --name web-api-plusnine --restart=always web-api-plusnine
