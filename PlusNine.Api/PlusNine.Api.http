@@ -1,4 +1,4 @@
-@PlusNine.Api_HostAddress = http://localhost:5181
+@PlusNine.Api_HostAddress = http://api.aminokun.com
 
 GET {{PlusNine.Api_HostAddress}}/weatherforecast/
 Accept: application/json
