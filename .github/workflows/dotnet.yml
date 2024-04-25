@@ -26,7 +26,7 @@ jobs:
       run: docker stop web-api-plusnine
     - name: Delete current docker container
       run: docker rm web-api-plusnine
-    - name: Remove current DiscordBot Image
+    - name: Remove current web api Image
       run: docker rmi --force web-api-plusnine
     - name: Build the Docker image
       run: docker build --rm -t web-api-plusnine .
