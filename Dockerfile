@@ -8,6 +8,7 @@ COPY ["PlusNine.Api/PlusNine.Api.csproj", "PlusNine.Api/"]
 COPY ["PlusNine.DataService/PlusNine.DataService.csproj", "PlusNine.DataService/"]
 COPY ["PlusNine.Entities/PlusNine.Entities.csproj", "PlusNine.Entities/"]
 RUN dotnet restore "PlusNine.Api/PlusNine.Api.csproj"
+RUN dotnet test --no-build --verbosity normal
 COPY . .
 WORKDIR "/src/PlusNine.Api"
 RUN dotnet build "PlusNine.Api.csproj" -c $BUILD_CONFIGURATION -o /app/build
