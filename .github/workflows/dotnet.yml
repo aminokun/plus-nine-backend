@@ -26,7 +26,7 @@ jobs:
       run: dotnet build --no-restore
     - name: Test
       run: dotnet test --no-build --verbosity normal
-    - name: CD to DiscordBot Directory
+    - name: CD to web-api Directory
       run: cd ~/plus-nine-backend
     - name: Change branch
       run: git checkout main
