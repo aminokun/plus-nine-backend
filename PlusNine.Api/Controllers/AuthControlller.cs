@@ -4,16 +4,22 @@ using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using PlusNine.Api.Models;
 using PlusNine.DataService.Repositories.Interfaces;
+using PlusNine.Entities.DbSet;
+using PlusNine.Entities.Dtos.Requests;
+using PlusNine.Entities.Dtos.Responses;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text;
+using System.Threading.Tasks;
 
 namespace PlusNine.Api.Controllers
 {
-    public class AuthControlller : BaseController
+    public class AuthController : BaseController
     {
-        public AuthControlller(
+        private readonly AppSettings _applicationSettings;
+
+        public AuthController(
             IUnitOfWork unitOfWork,
             IMapper mapper,
             IOptions<AppSettings> applicationSettings) : base(unitOfWork, mapper)
@@ -21,31 +27,26 @@ namespace PlusNine.Api.Controllers
             _applicationSettings = applicationSettings.Value;
         }
 
-        private static List<User> UserList = new List<User>();
-        private readonly AppSettings _applicationSettings;
-        
-
         [HttpPost("Login")]
-        public IActionResult Login([FromBody] Login model)
+        public async Task<IActionResult> Login([FromBody] Login model)
         {
-            var user = UserList.Where(u => u.UserName == model.UserName).FirstOrDefault();
+            var user = await _unitOfWork.User.SingleOrDefaultAsync(u => u.UserName == model.UserName);
             if (user == null)
             {
                 return BadRequest("Username or password was invalid");
             }
 
             var match = CheckPassword(model.Password, user);
-
             if (!match)
             {
                 return BadRequest("Username or password was invalid");
             }
 
-            JWTGenarator(user);
-            return Ok();
+            var tokenResponse = await JWTGenerator(user);
+            return Ok(tokenResponse);
         }
 
-        public dynamic JWTGenarator(User user)
+        private async Task<JwtResponse> JWTGenerator(User user)
         {
             var tokenHandler = new JwtSecurityTokenHandler();
             var key = Encoding.ASCII.GetBytes(_applicationSettings.Secret);
@@ -56,45 +57,48 @@ namespace PlusNine.Api.Controllers
                 Expires = DateTime.Now.AddDays(1),
                 SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha512Signature)
             };
-            var token = tokenHandler.CreateToken(tokenDescriptor);
-            var encrypterToken = tokenHandler.WriteToken(token);
 
-            SetJWT(encrypterToken);
+            var token = tokenHandler.CreateToken(tokenDescriptor);
+            var encryptedToken = tokenHandler.WriteToken(token);
+
+            SetJWT(encryptedToken);
 
             var refreshToken = GenerateRefreshToken();
+            await SetRefreshToken(refreshToken, user);
 
-            SetRefreshToken(refreshToken, user);
-
-            return new { token = encrypterToken, username = user.UserName };
+            return new JwtResponse
+            {
+                Token = encryptedToken,
+                Username = user.UserName
+            };
         }
 
         private RefreshToken GenerateRefreshToken()
         {
-            var refreshToken = new RefreshToken()
+            return new RefreshToken
             {
                 Token = Convert.ToBase64String(RandomNumberGenerator.GetBytes(64)),
                 Expires = DateTime.Now.AddDays(1),
                 Created = DateTime.Now
             };
-            return refreshToken;
         }
 
         [HttpGet("RefreshToken")]
-        private async Task<ActionResult<string>> RefreshToken()
+        public async Task<ActionResult<JwtResponse>> RefreshToken()
         {
             var refreshToken = Request.Cookies["X-Refresh-Token"];
-            var user = UserList.Where(u => u.Token == refreshToken).FirstOrDefault();
+            var user = await _unitOfWork.User.SingleOrDefaultAsync(u => u.Token == refreshToken);
 
             if (user == null || user.TokenExpires < DateTime.Now)
             {
                 return Unauthorized("Token has expired");
             }
 
-            JWTGenarator(user);
-            return Ok();
+            var tokenResponse = await JWTGenerator(user);
+            return Ok(tokenResponse);
         }
 
-        public void SetRefreshToken(RefreshToken refreshToken, User user)
+        private async Task SetRefreshToken(RefreshToken refreshToken, User user)
         {
             HttpContext.Response.Cookies.Append("X-Refresh-Token", refreshToken.Token,
                 new CookieOptions
@@ -103,17 +107,20 @@ namespace PlusNine.Api.Controllers
                     HttpOnly = true,
                     Secure = true,
                     IsEssential = true,
-                    SameSite = SameSiteMode.None,
+                    SameSite = SameSiteMode.None
                 });
 
-            UserList.Where(u => u.UserName == user.UserName).First().Token = refreshToken.Token;
-            UserList.Where(u => u.UserName == user.UserName).First().TokenCreated = refreshToken.Created;
-            UserList.Where(u => u.UserName == user.UserName).First().TokenExpires = refreshToken.Expires;
+            user.Token = refreshToken.Token;
+            user.TokenCreated = refreshToken.Created;
+            user.TokenExpires = refreshToken.Expires;
+
+            await _unitOfWork.User.Update(user);
+            await _unitOfWork.CompleteAsync();
         }
 
-        public void SetJWT(string encrypterToken)
+        private void SetJWT(string encryptedToken)
         {
-            HttpContext.Response.Cookies.Append("X-Access-Token", encrypterToken,
+            HttpContext.Response.Cookies.Append("X-Access-Token", encryptedToken,
                 new CookieOptions
                 {
                     Expires = DateTime.Now.AddMinutes(15),
@@ -124,50 +131,58 @@ namespace PlusNine.Api.Controllers
                 });
         }
 
-        [HttpDelete]
+        [HttpDelete("RevokeToken")]
         public async Task<IActionResult> RevokeToken(string username)
         {
-            UserList.Where(u => u.UserName == username).Select(t => t.Token = String.Empty);
+            var user = await _unitOfWork.User.SingleOrDefaultAsync(u => u.UserName == username);
+            if (user == null)
+            {
+                return NotFound("User not found");
+            }
+
+            user.Token = string.Empty;
+            user.TokenCreated = DateTime.MinValue;
+            user.TokenExpires = DateTime.MinValue;
+
+            var updateResult = await _unitOfWork.User.Update(user);
+            if (!updateResult)
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError, "Error updating user");
+            }
+
+            await _unitOfWork.CompleteAsync();
 
             return Ok();
         }
 
-
         private bool CheckPassword(string password, User user)
         {
-            bool result;
-
-            using (HMACSHA512? hmac = new HMACSHA512(user.PasswordSalt))
-            {
-                var compute = hmac.ComputeHash(Encoding.UTF8.GetBytes(password));
-                result = compute.SequenceEqual(user.PasswordHash);
-            }
-
-            return result;
+            using var hmac = new HMACSHA512(user.PasswordSalt);
+            var computedHash = hmac.ComputeHash(Encoding.UTF8.GetBytes(password));
+            return computedHash.SequenceEqual(user.PasswordHash);
         }
 
         [HttpPost("Register")]
-        public IActionResult Register([FromBody] Register model)
+        public async Task<IActionResult> Register([FromBody] CreateUserRequest model)
         {
-            var user = new User { UserName = model.UserName };
-            if (model.ConfirmPassword == model.Password)
-            {
-                using (HMACSHA512? hmac = new HMACSHA512())
-                {
-                    user.PasswordSalt = hmac.Key;
-                    user.PasswordHash = hmac.ComputeHash(Encoding.UTF8.GetBytes(model.Password));
-                }
-
-            }
-            else
+            if (model.Password != model.ConfirmPassword)
             {
                 return BadRequest("Passwords don't match");
             }
 
-            UserList.Add(user);
+            var user = _mapper.Map<User>(model);
+            using (var hmac = new HMACSHA512())
+            {
+                user.PasswordSalt = hmac.Key;
+                user.PasswordHash = hmac.ComputeHash(Encoding.UTF8.GetBytes(model.Password));
+            }
 
-            return Ok("New user: " + user.UserName + " has been registered succesfully");
+            await _unitOfWork.User.Add(user);
+            await _unitOfWork.CompleteAsync();
+
+            var userResponse = _mapper.Map<GetUserResponse>(user);
+
+            return Ok(userResponse);
         }
     }
 }
-
