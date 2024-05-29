@@ -73,7 +73,7 @@ namespace PlusNine.Api.Controllers
             };
         }
 
-        private RefreshToken GenerateRefreshToken()
+        private static RefreshToken GenerateRefreshToken()
         {
             return new RefreshToken
             {
@@ -155,7 +155,7 @@ namespace PlusNine.Api.Controllers
             return Ok();
         }
 
-        private bool CheckPassword(string password, User user)
+        private static bool CheckPassword(string password, User user)
         {
             using var hmac = new HMACSHA512(user.PasswordSalt);
             var computedHash = hmac.ComputeHash(Encoding.UTF8.GetBytes(password));
