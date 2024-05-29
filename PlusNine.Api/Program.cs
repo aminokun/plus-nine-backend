@@ -2,8 +2,13 @@ using Microsoft.EntityFrameworkCore;
 using PlusNine.DataService.Data;
 using PlusNine.DataService.Repositories.Interfaces;
 using PlusNine.DataService.Repositories;
+using PlusNine.Api;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens;
+using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
+ConfigurationManager configuration = builder.Configuration;
 
 //var allowedOrigins = builder.Configuration.GetValue<string>("AllowedOrigins")?.Split(',') ?? Array.Empty<string>();
 var allowedOrigins = builder.Configuration
@@ -36,6 +41,37 @@ builder.Services.AddSwaggerGen();
 builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
 builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 
+builder.Services.Configure<AppSettings>(
+    builder.Configuration.GetSection("ApplicationSettings"));
+
+builder.Services.AddAuthentication(authOpt =>
+{
+    authOpt.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+    authOpt.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+}).AddCookie(cookieOpt =>
+{
+    cookieOpt.Cookie.Name = "token";
+
+}).AddJwtBearer(jwtOpt =>
+{
+    jwtOpt.RequireHttpsMetadata = false;
+    jwtOpt.SaveToken = true;
+    jwtOpt.TokenValidationParameters = new TokenValidationParameters
+    {
+        ValidateIssuerSigningKey = true,
+        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(configuration["ApplicationSettings:Secret"])),
+        ValidateIssuer = false,
+        ValidateAudience = false,
+    };
+    jwtOpt.Events = new JwtBearerEvents
+    {
+        OnMessageReceived = context =>
+        {
+            context.Token = context.Request.Cookies["X-Access-Token"];
+            return Task.CompletedTask;
+        }
+    };
+});
 
 var app = builder.Build();
 
@@ -49,6 +85,8 @@ if (app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 
 app.UseCors("reactapp");
+
+app.UseAuthentication();
 
 app.UseAuthorization();
 
