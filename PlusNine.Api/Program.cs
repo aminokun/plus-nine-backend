@@ -5,7 +5,12 @@ using PlusNine.DataService.Repositories;
 
 var builder = WebApplication.CreateBuilder(args);
 
-var allowedOrigins = builder.Configuration.GetValue<string>("AllowedOrigins")?.Split(',') ?? Array.Empty<string>();
+//var allowedOrigins = builder.Configuration.GetValue<string>("AllowedOrigins")?.Split(',') ?? Array.Empty<string>();
+var allowedOrigins = builder.Configuration
+    .GetValue<string>("AllowedOrigins")?
+    .Split(',', StringSplitOptions.RemoveEmptyEntries)
+    .Select(origin => origin.Trim())
+    .ToArray() ?? Array.Empty<string>();
 
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseMySQL(builder.Configuration.GetConnectionString("DefaultConnection")));
@@ -15,11 +20,10 @@ builder.Services.AddCors(options => {
     // React
     options.AddPolicy("reactapp", policyBuilder =>
     {
-        //policyBuilder.WithOrigins(allowedOrigins);
-        policyBuilder.AllowAnyOrigin();
+        policyBuilder.WithOrigins(allowedOrigins);
         policyBuilder.AllowAnyHeader();
         policyBuilder.AllowAnyMethod();
-        //policyBuilder.AllowCredentials();
+        policyBuilder.AllowCredentials();
     });
 });
 
@@ -44,10 +48,10 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
+app.UseCors("reactapp");
+
 app.UseAuthorization();
 
 app.MapControllers();
-
-app.UseCors("reactapp");
 
 app.Run();
