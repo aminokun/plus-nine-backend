@@ -9,6 +9,8 @@ namespace PlusNine.DataService.Repositories.Interfaces
     public interface IUnitOfWork
     {
         IObjectiveRepository Objectives { get; }
+        IUserRepository User { get; }
+
         Task<bool> CompleteAsync();
     }
 }

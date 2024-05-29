@@ -8,12 +8,14 @@ namespace PlusNine.DataService.Repositories
     {
         private readonly AppDbContext _context;
         public IObjectiveRepository Objectives { get; }
+        public IUserRepository User { get; }
         public UnitOfWork(AppDbContext context, ILoggerFactory loggerFactory)
         {
             _context = context;
             var logger = loggerFactory.CreateLogger("logs");
 
             Objectives = new ObjectiveRepository(context, logger);
+            User = new UserRepository(context, logger);
         }
 
         public async Task<bool> CompleteAsync()
