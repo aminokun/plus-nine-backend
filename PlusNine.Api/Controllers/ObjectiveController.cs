@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using PlusNine.DataService.Repositories.Interfaces;
 using PlusNine.Entities.DbSet;
@@ -14,7 +15,6 @@ namespace PlusNine.Api.Controllers
             IMapper mapper) : base(unitOfWork, mapper)
         {
         }
-
         [HttpGet]
         [Route("{objectiveId:guid}")]
         public async Task<IActionResult> GetObjective(Guid objectiveId)
@@ -28,6 +28,8 @@ namespace PlusNine.Api.Controllers
             
             return Ok(result);
         }
+
+        [Authorize]
 
         [HttpGet]
         public async Task<IActionResult> GetAllObjectives()

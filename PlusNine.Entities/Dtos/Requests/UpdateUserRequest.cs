@@ -1,9 +1,12 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace PlusNine.Api.Models
+namespace PlusNine.Entities.Dtos.Requests
 {
-    public class User
+    public class UpdateUserRequest
     {
+        [Required]
+        public Guid Id { get; set; }
+
         [Required]
         public string UserName { get; set; }
         [Required]
@@ -11,7 +14,7 @@ namespace PlusNine.Api.Models
         [Required]
         public byte[] PasswordHash { get; set; }
 
-        public string Token { get; set; }
+        public string? Token { get; set; }
         public DateTime TokenCreated { get; set; }
         public DateTime TokenExpires { get; set; }
     }

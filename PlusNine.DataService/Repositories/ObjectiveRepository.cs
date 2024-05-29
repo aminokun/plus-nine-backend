@@ -1,14 +1,8 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
-using MySqlX.XDevAPI.Common;
 using PlusNine.DataService.Data;
 using PlusNine.DataService.Repositories.Interfaces;
 using PlusNine.Entities.DbSet;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace PlusNine.DataService.Repositories
 {

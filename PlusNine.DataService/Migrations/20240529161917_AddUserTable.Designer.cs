@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using PlusNine.DataService.Data;
 
@@ -10,9 +11,11 @@ using PlusNine.DataService.Data;
 namespace PlusNine.DataService.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20240529161917_AddUserTable")]
+    partial class AddUserTable
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -76,6 +79,7 @@ namespace PlusNine.DataService.Migrations
                         .HasColumnType("int");
 
                     b.Property<string>("Token")
+                        .IsRequired()
                         .HasColumnType("longtext");
 
                     b.Property<DateTime>("TokenCreated")
