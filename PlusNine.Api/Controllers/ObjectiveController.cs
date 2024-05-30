@@ -15,6 +15,8 @@ namespace PlusNine.Api.Controllers
             IMapper mapper) : base(unitOfWork, mapper)
         {
         }
+
+        [Authorize]
         [HttpGet]
         [Route("{objectiveId:guid}")]
         public async Task<IActionResult> GetObjective(Guid objectiveId)
@@ -30,7 +32,6 @@ namespace PlusNine.Api.Controllers
         }
 
         [Authorize]
-
         [HttpGet]
         public async Task<IActionResult> GetAllObjectives()
         {
@@ -38,6 +39,7 @@ namespace PlusNine.Api.Controllers
             return Ok(_mapper.Map<IEnumerable<Objective>>(objectives));
         }
 
+        [Authorize]
         [HttpPost("")]
         public async Task<IActionResult> AddObjective([FromBody] CreateObjectiveRequest objective)
         {
@@ -52,6 +54,7 @@ namespace PlusNine.Api.Controllers
             return CreatedAtAction(nameof(GetObjective), new { objectiveId = result.Id }, result);
         }
 
+        [Authorize]
         [HttpPut("")]
         public async Task<IActionResult> UpdateObjective([FromBody] UpdateObjectiveRequest objective)
         {
@@ -70,6 +73,7 @@ namespace PlusNine.Api.Controllers
             }
         }
 
+        [Authorize]
         [HttpDelete]
         [Route("{objectiveId:guid}")]
         public async Task<IActionResult> DeleteObjective(Guid objectiveId)

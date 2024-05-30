@@ -155,6 +155,28 @@ namespace PlusNine.Api.Controllers
             return Ok();
         }
 
+        [HttpGet("JwtCheck")]
+        public async Task<IActionResult> JwtCheck()
+        {
+            var usernameClaim = HttpContext.User.Claims.FirstOrDefault(c => c.Type == "username");
+            var username = usernameClaim?.Value;
+
+            if (string.IsNullOrEmpty(username))
+            {
+                return Unauthorized();
+            }
+
+            var user = await _unitOfWork.User.SingleOrDefaultAsync(u => u.UserName == username);
+            if (user == null)
+            {
+                return Unauthorized();
+            }
+
+            var userResponse = _mapper.Map<GetUserResponse>(user);
+            return Ok(userResponse);
+        }
+
+
         private static bool CheckPassword(string password, User user)
         {
             using var hmac = new HMACSHA512(user.PasswordSalt);
