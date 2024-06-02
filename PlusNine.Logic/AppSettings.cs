@@ -1,4 +1,4 @@
-﻿namespace PlusNine.Api
+﻿namespace PlusNine.Logic
 {
     public class AppSettings
     {

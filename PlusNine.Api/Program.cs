@@ -2,10 +2,11 @@ using Microsoft.EntityFrameworkCore;
 using PlusNine.DataService.Data;
 using PlusNine.DataService.Repositories.Interfaces;
 using PlusNine.DataService.Repositories;
-using PlusNine.Api;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
+using PlusNine.Logic.Interfaces;
+using PlusNine.Logic;
 
 var builder = WebApplication.CreateBuilder(args);
 ConfigurationManager configuration = builder.Configuration;
@@ -39,7 +40,10 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
 builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
+builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
+builder.Services.AddScoped<IAuthService, AuthService>();
+builder.Services.AddScoped<IObjectiveService, ObjectiveService>();
 
 builder.Services.Configure<AppSettings>(
     builder.Configuration.GetSection("ApplicationSettings"));

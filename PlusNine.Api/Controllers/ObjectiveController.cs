@@ -5,15 +5,18 @@ using PlusNine.DataService.Repositories.Interfaces;
 using PlusNine.Entities.DbSet;
 using PlusNine.Entities.Dtos.Requests;
 using PlusNine.Entities.Dtos.Responses;
+using PlusNine.Logic.Interfaces;
 
 namespace PlusNine.Api.Controllers
 {
     public class ObjectiveController : BaseController
     {
-        public ObjectiveController(
-            IUnitOfWork unitOfWork, 
-            IMapper mapper) : base(unitOfWork, mapper)
+        private readonly IObjectiveService _objectiveService;
+
+        public ObjectiveController(IUnitOfWork unitOfWork, IMapper mapper, IObjectiveService objectiveService)
+            : base(unitOfWork, mapper)
         {
+            _objectiveService = objectiveService;
         }
 
         [Authorize]
@@ -21,22 +24,23 @@ namespace PlusNine.Api.Controllers
         [Route("{objectiveId:guid}")]
         public async Task<IActionResult> GetObjective(Guid objectiveId)
         {
-            var objective = await _unitOfWork.Objectives.GetById(objectiveId);
-
-            if(objective == null)
-                return NotFound("Objective Not Found");
-
-            var result = _mapper.Map<GetObjectiveResponse>(objective);
-            
-            return Ok(result);
+            try
+            {
+                var result = await _objectiveService.GetObjective(objectiveId);
+                return Ok(result);
+            }
+            catch (ArgumentException ex)
+            {
+                return NotFound(ex.Message);
+            }
         }
 
         [Authorize]
         [HttpGet]
         public async Task<IActionResult> GetAllObjectives()
         {
-            var objectives = await _unitOfWork.Objectives.All();
-            return Ok(_mapper.Map<IEnumerable<Objective>>(objectives));
+            var objectives = await _objectiveService.GetAllObjectives();
+            return Ok(objectives);
         }
 
         [Authorize]
@@ -46,11 +50,7 @@ namespace PlusNine.Api.Controllers
             if (!ModelState.IsValid)
                 return BadRequest();
 
-            var result = _mapper.Map<Objective>(objective);
-
-            await _unitOfWork.Objectives.Add(result);
-            await _unitOfWork.CompleteAsync();
-
+            var result = await _objectiveService.AddObjective(objective);
             return CreatedAtAction(nameof(GetObjective), new { objectiveId = result.Id }, result);
         }
 
@@ -59,18 +59,10 @@ namespace PlusNine.Api.Controllers
         public async Task<IActionResult> UpdateObjective([FromBody] UpdateObjectiveRequest objective)
         {
             if (!ModelState.IsValid)
-            {
                 return BadRequest();
-            }
-            else
-            {
-                var result = _mapper.Map<Objective>(objective);
 
-                await _unitOfWork.Objectives.Update(result);
-                await _unitOfWork.CompleteAsync();
-
-                return NoContent();
-            }
+            await _objectiveService.UpdateObjective(objective);
+            return NoContent();
         }
 
         [Authorize]
@@ -78,15 +70,15 @@ namespace PlusNine.Api.Controllers
         [Route("{objectiveId:guid}")]
         public async Task<IActionResult> DeleteObjective(Guid objectiveId)
         {
-            var objective = await _unitOfWork.Objectives.GetById(objectiveId);
-
-            if(objective == null)
-                return NotFound();
-
-            await _unitOfWork.Objectives.Delete(objectiveId);
-            await _unitOfWork.CompleteAsync();
-            
-            return NoContent();
+            try
+            {
+                await _objectiveService.DeleteObjective(objectiveId);
+                return NoContent();
+            }
+            catch (ArgumentException ex)
+            {
+                return NotFound(ex.Message);
+            }
         }
     }
 }
