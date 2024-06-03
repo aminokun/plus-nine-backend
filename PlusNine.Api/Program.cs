@@ -11,7 +11,6 @@ using PlusNine.Logic;
 var builder = WebApplication.CreateBuilder(args);
 ConfigurationManager configuration = builder.Configuration;
 
-//var allowedOrigins = builder.Configuration.GetValue<string>("AllowedOrigins")?.Split(',') ?? Array.Empty<string>();
 var allowedOrigins = builder.Configuration
     .GetValue<string>("AllowedOrigins")?
     .Split(',', StringSplitOptions.RemoveEmptyEntries)

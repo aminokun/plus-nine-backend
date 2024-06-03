@@ -20,11 +20,7 @@ namespace PlusNine.Logic
 
         public async Task<GetObjectiveResponse> GetObjective(Guid objectiveId)
         {
-            var objective = await _unitOfWork.Objectives.GetById(objectiveId);
-
-            if (objective == null)
-                throw new ArgumentException("Objective Not Found", nameof(objectiveId));
-
+            var objective = await _unitOfWork.Objectives.GetById(objectiveId) ?? throw new ArgumentException("Objective Not Found", nameof(objectiveId));
             var result = _mapper.Map<GetObjectiveResponse>(objective);
 
             return result;

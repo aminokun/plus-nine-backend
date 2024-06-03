@@ -30,6 +30,34 @@ namespace PlusNine.Logic
             _httpContextAccessor = httpContextAccessor;
         }
 
+        public async Task<GetUserResponse> Register(CreateUserRequest model)
+        {
+            if (model.Password != model.ConfirmPassword)
+            {
+                throw new ArgumentException("Passwords don't match");
+            }
+
+            var existingUser = await _unitOfWork.User.SingleOrDefaultAsync(u => u.UserName == model.UserName);
+            if (existingUser != null)
+            {
+                throw new ArgumentException("Username is already taken");
+            }
+
+            var user = _mapper.Map<User>(model);
+            using (var hmac = new HMACSHA512())
+            {
+                user.PasswordSalt = hmac.Key;
+                user.PasswordHash = hmac.ComputeHash(Encoding.UTF8.GetBytes(model.Password));
+            }
+
+            await _unitOfWork.User.Add(user);
+            await _unitOfWork.CompleteAsync();
+
+            var userResponse = _mapper.Map<GetUserResponse>(user);
+            return userResponse;
+        }
+
+
         public async Task<JwtResponse> Login(Login model)
         {
             var user = await _unitOfWork.User.SingleOrDefaultAsync(u => u.UserName == model.UserName);
@@ -94,26 +122,6 @@ namespace PlusNine.Logic
             return userResponse;
         }
 
-        public async Task<GetUserResponse> Register(CreateUserRequest model)
-        {
-            if (model.Password != model.ConfirmPassword)
-            {
-                throw new ArgumentException("Passwords don't match");
-            }
-
-            var user = _mapper.Map<User>(model);
-            using (var hmac = new HMACSHA512())
-            {
-                user.PasswordSalt = hmac.Key;
-                user.PasswordHash = hmac.ComputeHash(Encoding.UTF8.GetBytes(model.Password));
-            }
-
-            await _unitOfWork.User.Add(user);
-            await _unitOfWork.CompleteAsync();
-
-            var userResponse = _mapper.Map<GetUserResponse>(user);
-            return userResponse;
-        }
 
         private async Task<JwtResponse> JWTGenerator(User user)
         {
