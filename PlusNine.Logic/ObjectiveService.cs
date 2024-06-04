@@ -18,23 +18,29 @@ namespace PlusNine.Logic
             _mapper = mapper;
         }
 
-        public async Task<GetObjectiveResponse> GetObjective(Guid objectiveId)
+        public async Task<GetObjectiveResponse> GetObjective(Guid objectiveId, Guid userId)
         {
-            var objective = await _unitOfWork.Objectives.GetById(objectiveId) ?? throw new ArgumentException("Objective Not Found", nameof(objectiveId));
+            var objective = await _unitOfWork.Objectives.SingleOrDefaultAsync(o => o.Id == objectiveId && o.UserId == userId);
+
+            if (objective == null)
+                throw new ArgumentException("Objective Not Found", nameof(objectiveId));
+
             var result = _mapper.Map<GetObjectiveResponse>(objective);
 
             return result;
         }
 
-        public async Task<IEnumerable<Objective>> GetAllObjectives()
+        public async Task<IEnumerable<Objective>> GetAllObjectives(Guid userId)
         {
             var objectives = await _unitOfWork.Objectives.All();
-            return _mapper.Map<IEnumerable<Objective>>(objectives);
+            var userObjectives = objectives.Where(o => o.UserId == userId);
+            return _mapper.Map<IEnumerable<Objective>>(userObjectives);
         }
 
-        public async Task<Objective> AddObjective(CreateObjectiveRequest objective)
+        public async Task<Objective> AddObjective(CreateObjectiveRequest objective, Guid userId)
         {
             var result = _mapper.Map<Objective>(objective);
+            result.UserId = userId;
 
             await _unitOfWork.Objectives.Add(result);
             await _unitOfWork.CompleteAsync();
@@ -42,17 +48,23 @@ namespace PlusNine.Logic
             return result;
         }
 
-        public async Task UpdateObjective(UpdateObjectiveRequest objective)
-        {
-            var result = _mapper.Map<Objective>(objective);
 
-            await _unitOfWork.Objectives.Update(result);
+        public async Task UpdateObjective(UpdateObjectiveRequest objective, Guid userId)
+        {
+            var existingObjective = await _unitOfWork.Objectives.SingleOrDefaultAsync(o => o.Id == objective.ObjectiveId && o.UserId == userId);
+
+            if (existingObjective == null)
+                throw new ArgumentException("Objective Not Found", nameof(objective.ObjectiveId));
+
+            _mapper.Map(objective, existingObjective);
+
+            await _unitOfWork.Objectives.Update(existingObjective);
             await _unitOfWork.CompleteAsync();
         }
 
-        public async Task DeleteObjective(Guid objectiveId)
+        public async Task DeleteObjective(Guid objectiveId, Guid userId)
         {
-            var objective = await _unitOfWork.Objectives.GetById(objectiveId);
+            var objective = await _unitOfWork.Objectives.SingleOrDefaultAsync(o => o.Id == objectiveId && o.UserId == userId);
 
             if (objective == null)
                 throw new ArgumentException("Objective Not Found", nameof(objectiveId));

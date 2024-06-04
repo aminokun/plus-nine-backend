@@ -2,10 +2,9 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using PlusNine.DataService.Repositories.Interfaces;
-using PlusNine.Entities.DbSet;
 using PlusNine.Entities.Dtos.Requests;
-using PlusNine.Entities.Dtos.Responses;
 using PlusNine.Logic.Interfaces;
+using System.Security.Claims;
 
 namespace PlusNine.Api.Controllers
 {
@@ -26,7 +25,8 @@ namespace PlusNine.Api.Controllers
         {
             try
             {
-                var result = await _objectiveService.GetObjective(objectiveId);
+                var userId = GetUserId();
+                var result = await _objectiveService.GetObjective(objectiveId, userId);
                 return Ok(result);
             }
             catch (ArgumentException ex)
@@ -39,7 +39,8 @@ namespace PlusNine.Api.Controllers
         [HttpGet]
         public async Task<IActionResult> GetAllObjectives()
         {
-            var objectives = await _objectiveService.GetAllObjectives();
+            var userId = GetUserId();
+            var objectives = await _objectiveService.GetAllObjectives(userId);
             return Ok(objectives);
         }
 
@@ -50,7 +51,8 @@ namespace PlusNine.Api.Controllers
             if (!ModelState.IsValid)
                 return BadRequest();
 
-            var result = await _objectiveService.AddObjective(objective);
+            var userId = GetUserId();
+            var result = await _objectiveService.AddObjective(objective, userId);
             return CreatedAtAction(nameof(GetObjective), new { objectiveId = result.Id }, result);
         }
 
@@ -61,7 +63,8 @@ namespace PlusNine.Api.Controllers
             if (!ModelState.IsValid)
                 return BadRequest();
 
-            await _objectiveService.UpdateObjective(objective);
+            var userId = GetUserId();
+            await _objectiveService.UpdateObjective(objective, userId);
             return NoContent();
         }
 
@@ -72,13 +75,23 @@ namespace PlusNine.Api.Controllers
         {
             try
             {
-                await _objectiveService.DeleteObjective(objectiveId);
+                var userId = GetUserId();
+                await _objectiveService.DeleteObjective(objectiveId, userId);
                 return NoContent();
             }
             catch (ArgumentException ex)
             {
                 return NotFound(ex.Message);
             }
+        }
+
+        private Guid GetUserId()
+        {
+            var userIdClaim = User.Claims.FirstOrDefault(c => c.Type == "Id");
+            if (string.IsNullOrEmpty(userIdClaim?.Value))
+                throw new UnauthorizedAccessException("User ID not found in claims.");
+
+            return Guid.Parse(userIdClaim?.Value);
         }
     }
 }
