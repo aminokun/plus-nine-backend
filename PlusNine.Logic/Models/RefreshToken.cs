@@ -1,4 +1,4 @@
-﻿namespace PlusNine.Api.Models
+﻿namespace PlusNine.Logic.Models
 {
     public class RefreshToken
     {

@@ -5,9 +5,9 @@ FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 ARG BUILD_CONFIGURATION=Release
 WORKDIR /src
 COPY ["PlusNine.Api/PlusNine.Api.csproj", "PlusNine.Api/"]
-COPY ["./PlusNine.Api/appsettings.json", "PlusNine.Api/"]
 COPY ["PlusNine.DataService/PlusNine.DataService.csproj", "PlusNine.DataService/"]
 COPY ["PlusNine.Entities/PlusNine.Entities.csproj", "PlusNine.Entities/"]
+COPY ["PlusNine.Logic/PlusNine.Logic.csproj", "PlusNine.Logic/"]
 RUN dotnet restore "PlusNine.Api/PlusNine.Api.csproj"
 COPY . .
 WORKDIR "/src/PlusNine.Api"

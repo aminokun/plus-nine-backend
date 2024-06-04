@@ -1,14 +1,12 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace PlusNine.Api.Models
+namespace PlusNine.Logic.Models
 {
-    public class Register
+    public class Login
     {
         [Required]
         public required string UserName { get; set; }
         [Required]
         public required string Password { get; set; }
-        [Required]
-        public required string ConfirmPassword { get; set; }
     }
 }
