@@ -16,19 +16,6 @@ namespace PlusNine.DataService.Repositories
         {
         }
 
-        public async Task<User> SingleOrDefaultAsync(Func<User, bool> predicate)
-        {
-            try
-            {
-                return await Task.FromResult(_dbSet.AsNoTracking().SingleOrDefault(predicate));
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "{Repo} SingleOrDefaultAsync Function Error", typeof(UserRepository));
-                throw;
-            }
-        }
-
         public override async Task<IEnumerable<User>> All()
         {
             try

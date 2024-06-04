@@ -2,6 +2,8 @@
 using Microsoft.Extensions.Logging;
 using PlusNine.DataService.Data;
 using PlusNine.DataService.Repositories.Interfaces;
+using PlusNine.Entities.DbSet;
+using System.Linq;
 
 
 namespace PlusNine.DataService.Repositories
@@ -21,6 +23,20 @@ namespace PlusNine.DataService.Repositories
 
             _dbSet = context.Set<T>();
         }
+
+        public async Task<T> SingleOrDefaultAsync(Func<T, bool> predicate)
+        {
+            try
+            {
+                return await Task.FromResult(_dbSet.AsNoTracking().SingleOrDefault(predicate));
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "{Repo} SingleOrDefaultAsync Function Error", typeof(GenericRepository<T>));
+                throw;
+            }
+        }
+
         public virtual Task<IEnumerable<T>> All()
         {
             throw new NotImplementedException();
