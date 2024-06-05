@@ -2,13 +2,18 @@
 using PlusNine.Entities.DbSet;
 using PlusNine.Entities.Dtos.Requests;
 
-namespace PlusNine.Api.MappingProfiles
+namespace PlusNine.Logic.MappingProfiles
 {
     public class RequestToDomain : Profile
     {
         public RequestToDomain()
         {
             CreateMap<CreateObjectiveRequest, Objective>()
+                .ForMember(
+                    dest => dest.UserId,
+                opt => opt
+                    .MapFrom(src => src.UserId)
+                )
                 .ForMember(
                     dest => dest.Status,
                 opt => opt

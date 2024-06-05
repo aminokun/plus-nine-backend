@@ -30,11 +30,11 @@ namespace PlusNine.Logic
             return result;
         }
 
-        public async Task<IEnumerable<Objective>> GetAllObjectives(Guid userId)
+        public async Task<IEnumerable<GetObjectiveResponse>> GetAllObjectives(Guid userId)
         {
             var objectives = await _unitOfWork.Objectives.All();
             var userObjectives = objectives.Where(o => o.UserId == userId);
-            return _mapper.Map<IEnumerable<Objective>>(userObjectives);
+            return _mapper.Map<IEnumerable<GetObjectiveResponse>>(userObjectives);
         }
 
         public async Task<Objective> AddObjective(CreateObjectiveRequest objective, Guid userId)

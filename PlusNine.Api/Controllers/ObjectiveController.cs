@@ -4,7 +4,6 @@ using Microsoft.AspNetCore.Mvc;
 using PlusNine.DataService.Repositories.Interfaces;
 using PlusNine.Entities.Dtos.Requests;
 using PlusNine.Logic.Interfaces;
-using System.Security.Claims;
 
 namespace PlusNine.Api.Controllers
 {

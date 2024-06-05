@@ -2,6 +2,7 @@
 {
     public class CreateObjectiveRequest
     {
+        public Guid UserId { get; set; }
         public string ObjectiveName { get; set; } = string.Empty;
         public int CurrentAmount { get; set; }
         public int AmountToComplete { get; set; }

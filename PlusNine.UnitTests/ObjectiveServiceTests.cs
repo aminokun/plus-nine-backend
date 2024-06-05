@@ -2,12 +2,9 @@
 using Moq;
 using PlusNine.DataService.Repositories.Interfaces;
 using PlusNine.Entities.DbSet;
-using PlusNine.Entities.Dtos.Requests;
+using PlusNine.Entities.Dtos.Responses;
 using PlusNine.Logic;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+using PlusNine.Logic.MappingProfiles;
 using Xunit;
 
 namespace PlusNine.UnitTests
@@ -20,7 +17,8 @@ namespace PlusNine.UnitTests
         {
             var config = new MapperConfiguration(cfg =>
             {
-                cfg.CreateMap<Objective, Objective>();
+                cfg.AddProfile<DomainToResponse>();
+                cfg.AddProfile<RequestToDomain>();
             });
 
             _mapper = config.CreateMapper();
@@ -52,6 +50,7 @@ namespace PlusNine.UnitTests
             Assert.NotNull(result);
             Assert.Equal(2, result.Count());
             Assert.All(result, o => Assert.Equal(userId, o.UserId));
+            Assert.IsType<List<GetObjectiveResponse>>(result);
         }
     }
 }

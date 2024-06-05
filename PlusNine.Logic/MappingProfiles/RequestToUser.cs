@@ -2,7 +2,7 @@
 using PlusNine.Entities.DbSet;
 using PlusNine.Entities.Dtos.Requests;
 
-namespace PlusNine.Api.MappingProfiles
+namespace PlusNine.Logic.MappingProfiles
 {
 
     public class RequestToUser : Profile
