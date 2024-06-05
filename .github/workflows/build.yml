@@ -47,5 +47,5 @@ jobs:
         run: |
           .\.sonar\scanner\dotnet-sonarscanner begin /k:"aminokun_plus-nine-backend_e320429f-609c-475c-ba9d-a381ddb25587" /d:sonar.token="${{ secrets.SONAR_TOKEN }}" /d:sonar.host.url="${{ secrets.SONAR_HOST_URL }}" /d:sonar.cs.cobertura.reportPaths="**/coverage.cobertura.xml"
           dotnet build
-          dotnet test --collect:"XPlat Code Coverage" --results-directory .\TestResults
+          dotnet test --collect:"XPlat Code Coverage"
           .\.sonar\scanner\dotnet-sonarscanner end /d:sonar.token="${{ secrets.SONAR_TOKEN }}"
