@@ -24,6 +24,18 @@ namespace PlusNine.DataService.Repositories
             _dbSet = context.Set<T>();
         }
 
+        public virtual async Task<T> GetByIdAsync(Guid id)
+        {
+            try
+            {
+                return await _dbSet.FindAsync(id);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "{Repo} GetByIdAsync Function Error", typeof(GenericRepository<T>));
+                throw;
+            }
+        }
         public async Task<T> SingleOrDefaultAsync(Func<T, bool> predicate)
         {
             try

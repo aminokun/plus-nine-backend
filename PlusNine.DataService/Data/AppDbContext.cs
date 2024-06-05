@@ -7,6 +7,8 @@ namespace PlusNine.DataService.Data
     {
         public virtual DbSet<Objective> Objectives { get; set; }
         public virtual DbSet<User> User { get; set; }
+        public virtual DbSet<FriendRequest> FriendRequests { get; set; }
+        public virtual DbSet<Friendship> Frienships { get; set; }
 
         public AppDbContext(DbContextOptions<AppDbContext> options) : base(options) { }
 
