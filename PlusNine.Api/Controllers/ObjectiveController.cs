@@ -2,18 +2,19 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using PlusNine.DataService.Repositories.Interfaces;
-using PlusNine.Entities.DbSet;
 using PlusNine.Entities.Dtos.Requests;
-using PlusNine.Entities.Dtos.Responses;
+using PlusNine.Logic.Interfaces;
 
 namespace PlusNine.Api.Controllers
 {
     public class ObjectiveController : BaseController
     {
-        public ObjectiveController(
-            IUnitOfWork unitOfWork, 
-            IMapper mapper) : base(unitOfWork, mapper)
+        private readonly IObjectiveService _objectiveService;
+
+        public ObjectiveController(IUnitOfWork unitOfWork, IMapper mapper, IObjectiveService objectiveService)
+            : base(unitOfWork, mapper)
         {
+            _objectiveService = objectiveService;
         }
 
         [Authorize]
@@ -21,22 +22,25 @@ namespace PlusNine.Api.Controllers
         [Route("{objectiveId:guid}")]
         public async Task<IActionResult> GetObjective(Guid objectiveId)
         {
-            var objective = await _unitOfWork.Objectives.GetById(objectiveId);
-
-            if(objective == null)
-                return NotFound("Objective Not Found");
-
-            var result = _mapper.Map<GetObjectiveResponse>(objective);
-            
-            return Ok(result);
+            try
+            {
+                var userId = GetUserId();
+                var result = await _objectiveService.GetObjective(objectiveId, userId);
+                return Ok(result);
+            }
+            catch (ArgumentException ex)
+            {
+                return NotFound(ex.Message);
+            }
         }
 
         [Authorize]
         [HttpGet]
         public async Task<IActionResult> GetAllObjectives()
         {
-            var objectives = await _unitOfWork.Objectives.All();
-            return Ok(_mapper.Map<IEnumerable<Objective>>(objectives));
+            var userId = GetUserId();
+            var objectives = await _objectiveService.GetAllObjectives(userId);
+            return Ok(objectives);
         }
 
         [Authorize]
@@ -46,11 +50,8 @@ namespace PlusNine.Api.Controllers
             if (!ModelState.IsValid)
                 return BadRequest();
 
-            var result = _mapper.Map<Objective>(objective);
-
-            await _unitOfWork.Objectives.Add(result);
-            await _unitOfWork.CompleteAsync();
-
+            var userId = GetUserId();
+            var result = await _objectiveService.AddObjective(objective, userId);
             return CreatedAtAction(nameof(GetObjective), new { objectiveId = result.Id }, result);
         }
 
@@ -59,18 +60,11 @@ namespace PlusNine.Api.Controllers
         public async Task<IActionResult> UpdateObjective([FromBody] UpdateObjectiveRequest objective)
         {
             if (!ModelState.IsValid)
-            {
                 return BadRequest();
-            }
-            else
-            {
-                var result = _mapper.Map<Objective>(objective);
 
-                await _unitOfWork.Objectives.Update(result);
-                await _unitOfWork.CompleteAsync();
-
-                return NoContent();
-            }
+            var userId = GetUserId();
+            await _objectiveService.UpdateObjective(objective, userId);
+            return NoContent();
         }
 
         [Authorize]
@@ -78,15 +72,25 @@ namespace PlusNine.Api.Controllers
         [Route("{objectiveId:guid}")]
         public async Task<IActionResult> DeleteObjective(Guid objectiveId)
         {
-            var objective = await _unitOfWork.Objectives.GetById(objectiveId);
+            try
+            {
+                var userId = GetUserId();
+                await _objectiveService.DeleteObjective(objectiveId, userId);
+                return NoContent();
+            }
+            catch (ArgumentException ex)
+            {
+                return NotFound(ex.Message);
+            }
+        }
 
-            if(objective == null)
-                return NotFound();
+        private Guid GetUserId()
+        {
+            var userIdClaim = User.Claims.FirstOrDefault(c => c.Type == "Id");
+            if (string.IsNullOrEmpty(userIdClaim?.Value))
+                throw new UnauthorizedAccessException("User ID not found in claims.");
 
-            await _unitOfWork.Objectives.Delete(objectiveId);
-            await _unitOfWork.CompleteAsync();
-            
-            return NoContent();
+            return Guid.Parse(userIdClaim?.Value);
         }
     }
 }
