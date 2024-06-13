@@ -6,11 +6,12 @@ using System.Threading.Tasks;
 
 namespace PlusNine.DataService.Repositories.Interfaces
 {
-    public interface IUnitOfWork
+    public interface IUnitOfWork : IDisposable
     {
         IObjectiveRepository Objectives { get; }
         IUserRepository User { get; }
-
+        IFriendRequestRepository FriendRequest { get; }
+        IFriendshipRepository Friendship { get; }
         Task<bool> CompleteAsync();
     }
 }

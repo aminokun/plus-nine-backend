@@ -9,6 +9,9 @@ namespace PlusNine.DataService.Repositories
         private readonly AppDbContext _context;
         public IObjectiveRepository Objectives { get; }
         public IUserRepository User { get; }
+        public IFriendRequestRepository FriendRequest { get; }
+        public IFriendshipRepository Friendship { get; }
+
         public UnitOfWork(AppDbContext context, ILoggerFactory loggerFactory)
         {
             _context = context;
@@ -16,6 +19,8 @@ namespace PlusNine.DataService.Repositories
 
             Objectives = new ObjectiveRepository(context, logger);
             User = new UserRepository(context, logger);
+            FriendRequest = new FriendRequestRepository(context, logger);
+            Friendship = new FriendshipRepository(context, logger);
         }
 
         public async Task<bool> CompleteAsync()
