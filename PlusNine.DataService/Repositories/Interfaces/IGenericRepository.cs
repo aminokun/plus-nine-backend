@@ -9,6 +9,7 @@ namespace PlusNine.DataService.Repositories.Interfaces
 {
     public interface IGenericRepository<T> where T : class
     {
+        Task<T> GetByIdAsync(Guid id);
         Task<T> SingleOrDefaultAsync(Func<T, bool> predicate);
         Task<IEnumerable<T>> All();
         Task<T?> GetById(Guid id);

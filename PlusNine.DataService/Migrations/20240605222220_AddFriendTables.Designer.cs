@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using PlusNine.DataService.Data;
 
@@ -10,9 +11,11 @@ using PlusNine.DataService.Data;
 namespace PlusNine.DataService.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20240605222220_AddFriendTables")]
+    partial class AddFriendTables
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -46,32 +49,6 @@ namespace PlusNine.DataService.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("FriendRequests");
-                });
-
-            modelBuilder.Entity("PlusNine.Entities.DbSet.Friendship", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("char(36)");
-
-                    b.Property<DateTime>("AddedDate")
-                        .HasColumnType("datetime(6)");
-
-                    b.Property<int>("Status")
-                        .HasColumnType("int");
-
-                    b.Property<DateTime>("UpdatedDate")
-                        .HasColumnType("datetime(6)");
-
-                    b.Property<Guid>("User1Id")
-                        .HasColumnType("char(36)");
-
-                    b.Property<Guid>("User2Id")
-                        .HasColumnType("char(36)");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("Frienships");
                 });
 
             modelBuilder.Entity("PlusNine.Entities.DbSet.Objective", b =>

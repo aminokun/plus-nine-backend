@@ -3,10 +3,8 @@ using Microsoft.Extensions.Logging;
 using PlusNine.DataService.Data;
 using PlusNine.DataService.Repositories.Interfaces;
 using PlusNine.Entities.DbSet;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+using System.Linq.Expressions;
+
 
 namespace PlusNine.DataService.Repositories
 {
@@ -29,6 +27,24 @@ namespace PlusNine.DataService.Repositories
             catch (Exception ex)
             {
                 _logger.LogError(ex, "{Repo} All Function Error", typeof(UserRepository));
+                throw;
+            }
+        }
+
+        public async Task<IEnumerable<User>> GetAllAsync(Expression<Func<User, bool>> predicate)
+        {
+            try
+            {
+                return await _dbSet.Where(predicate)
+                    .Where(x => x.Status == 1)
+                    .AsNoTracking()
+                    .AsSplitQuery()
+                    .OrderBy(x => x.AddedDate)
+                    .ToListAsync();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "{Repo} GetAllAsync Function Error", typeof(UserRepository));
                 throw;
             }
         }
