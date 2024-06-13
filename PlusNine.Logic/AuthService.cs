@@ -70,6 +70,25 @@ namespace PlusNine.Logic
             return tokenResponse;
         }
 
+        public async Task Logout()
+        {
+            _httpContextAccessor.HttpContext.Response.Cookies.Delete("X-Access-Token", new CookieOptions
+            {
+                HttpOnly = true,
+                Secure = true,
+                SameSite = SameSiteMode.None
+            });
+
+            _httpContextAccessor.HttpContext.Response.Cookies.Delete("X-Refresh-Token", new CookieOptions
+            {
+                HttpOnly = true,
+                Secure = true,
+                SameSite = SameSiteMode.None
+            });
+            
+           await Task.CompletedTask;
+        }
+
         public async Task<JwtResponse> RefreshToken()
         {
             var refreshToken = GetRefreshTokenFromCookie();
@@ -107,16 +126,22 @@ namespace PlusNine.Logic
 
         public async Task<GetUserResponse> JwtCheck()
         {
-            var username = GetUsernameFromClaims(); 
-            var Id = GetIdFromClaims(); 
+            var jwtToken = GetJwtTokenFromCookie();
 
+            if (string.IsNullOrEmpty(jwtToken))
+            {
+                throw new UnauthorizedAccessException("JWT token not found");
+            }
+
+            var username = GetUsernameFromClaims();
+            var Id = GetIdFromClaims();
 
             if (string.IsNullOrEmpty(username))
             {
-                throw new UnauthorizedAccessException();
+                throw new UnauthorizedAccessException("Invalid JWT token");
             }
 
-            var user = await _unitOfWork.User.SingleOrDefaultAsync(u => u.Id == Id && u.UserName == username) ?? throw new UnauthorizedAccessException();
+            var user = await _unitOfWork.User.SingleOrDefaultAsync(u => u.Id == Id && u.UserName == username) ?? throw new UnauthorizedAccessException("User not found");
 
             var userResponse = _mapper.Map<GetUserResponse>(user);
             return userResponse;
@@ -219,6 +244,11 @@ namespace PlusNine.Logic
             var IdClaim = _httpContextAccessor.HttpContext.User.Claims.FirstOrDefault(c => c.Type == "Id");
             Guid Id = Guid.Parse(IdClaim?.Value);
             return Id;
+        }
+        private string GetJwtTokenFromCookie()
+        {
+            var jwtToken = _httpContextAccessor.HttpContext.Request.Cookies["X-Access-Token"];
+            return jwtToken;
         }
     }
 }

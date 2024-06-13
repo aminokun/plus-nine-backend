@@ -5,9 +5,9 @@ namespace PlusNine.Api.Hubs
 {
     public class FriendHub : Hub, IFriendHub
     {
-        public async Task SendFriendRequestNotification(Guid receiverId)
+        public async Task SendFriendRequestNotification()
         {
-            await Clients.User(receiverId.ToString()).SendAsync("ReceiveFriendRequest");
+            await Clients.Others.SendAsync("ReceiveNotification");
         }
 
         public async Task NotifyFriendRequestAccepted(Guid senderId)

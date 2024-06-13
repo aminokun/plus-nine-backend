@@ -13,6 +13,7 @@ namespace PlusNine.Logic
         private readonly IMapper _mapper;
         private readonly IFriendHub _friendHub;
 
+
         public FriendService(IUnitOfWork unitOfWork, IMapper mapper, IFriendHub friendHub)
         {
             _unitOfWork = unitOfWork;
@@ -20,13 +21,32 @@ namespace PlusNine.Logic
             _friendHub = friendHub;
         }
 
-        public async Task SendFriendRequest(SendFriendRequestRequest request)
+        public async Task<IEnumerable<FriendRequestResponse>> GetFriendRequests(Guid userId)
         {
-            var friendRequest = _mapper.Map<FriendRequest>(request);
+            var friendRequests = await _unitOfWork.FriendRequest.GetAllAsync(fr => fr.ReceiverId == userId && fr.FriendShipStatus == FriendRequestStatus.Pending);
+            var friendRequestResponses = new List<FriendRequestResponse>();
+
+            foreach (var friendRequest in friendRequests)
+            {
+                var sender = await _unitOfWork.User.GetByIdAsync(friendRequest.SenderId);
+                var friendRequestResponse = new FriendRequestResponse
+                {
+                    Id = friendRequest.Id,
+                    SenderId = sender.Id
+                };
+                friendRequestResponses.Add(friendRequestResponse);
+            }
+
+            return friendRequestResponses;
+        }
+
+        public async Task SendFriendRequest(Guid userId, Guid receiverId)
+        {
+            var friendRequest = _mapper.Map<FriendRequest>((userId, receiverId)); 
             await _unitOfWork.FriendRequest.Add(friendRequest);
             await _unitOfWork.CompleteAsync();
 
-            await _friendHub.SendFriendRequestNotification(request.ReceiverId);
+            await _friendHub.SendFriendRequestNotification();
         }
 
         public async Task AcceptFriendRequest(Guid requestId)

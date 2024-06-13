@@ -6,7 +6,8 @@ namespace PlusNine.Logic.Interfaces
     public interface IFriendService
     {
         Task<IEnumerable<UserSearchResponse>> SearchUsers(string username);
-        Task SendFriendRequest(SendFriendRequestRequest request);
+        Task<IEnumerable<FriendRequestResponse>> GetFriendRequests(Guid userId);
+        Task SendFriendRequest(Guid userId, Guid recieverId);
         Task AcceptFriendRequest(Guid requestId);
         Task RejectFriendRequest(Guid requestId);
     }

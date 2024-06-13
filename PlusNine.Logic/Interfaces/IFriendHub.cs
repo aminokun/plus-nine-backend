@@ -2,7 +2,7 @@
 {
     public interface IFriendHub
     {
-        Task SendFriendRequestNotification(Guid receiverId);
+        Task SendFriendRequestNotification();
         Task NotifyFriendRequestAccepted(Guid senderId);
         Task NotifyFriendRequestRejected(Guid senderId);
     }
