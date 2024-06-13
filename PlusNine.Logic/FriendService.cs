@@ -1,9 +1,10 @@
 ﻿using AutoMapper;
+using Microsoft.AspNetCore.SignalR;
 using PlusNine.DataService.Repositories.Interfaces;
 using PlusNine.Entities.DbSet;
-using PlusNine.Entities.Dtos.Requests;
 using PlusNine.Entities.Dtos.Responses;
 using PlusNine.Logic.Interfaces;
+using PlusNine.Logic.Hubs;
 
 namespace PlusNine.Logic
 {
@@ -11,14 +12,14 @@ namespace PlusNine.Logic
     {
         private readonly IUnitOfWork _unitOfWork;
         private readonly IMapper _mapper;
-        private readonly IFriendHub _friendHub;
+        private readonly IHubContext<FriendHub> _hubContext;
 
 
-        public FriendService(IUnitOfWork unitOfWork, IMapper mapper, IFriendHub friendHub)
+        public FriendService(IUnitOfWork unitOfWork, IMapper mapper, IHubContext<FriendHub> hubContext)
         {
             _unitOfWork = unitOfWork;
             _mapper = mapper;
-            _friendHub = friendHub;
+            _hubContext = hubContext;
         }
 
         public async Task<IEnumerable<FriendRequestResponse>> GetFriendRequests(Guid userId)
@@ -46,7 +47,9 @@ namespace PlusNine.Logic
             await _unitOfWork.FriendRequest.Add(friendRequest);
             await _unitOfWork.CompleteAsync();
 
-            await _friendHub.SendFriendRequestNotification();
+            await _hubContext.Clients.Group(receiverId.ToString()).SendAsync("ReceiveFriendRequest");
+            //await _hubContext.Clients.All.SendAsync("ReceiveFriendRequest", "message");
+
         }
 
         public async Task AcceptFriendRequest(Guid requestId)
@@ -67,7 +70,7 @@ namespace PlusNine.Logic
             await _unitOfWork.Friendship.Add(friendship);
             await _unitOfWork.CompleteAsync();
 
-            await _friendHub.NotifyFriendRequestAccepted(friendRequest.SenderId);
+            await _hubContext.Clients.Group(friendRequest.SenderId.ToString()).SendAsync("FriendRequestAccepted");
         }
 
         public async Task RejectFriendRequest(Guid requestId)
@@ -85,7 +88,8 @@ namespace PlusNine.Logic
             await _unitOfWork.FriendRequest.Update(friendRequest);
             await _unitOfWork.CompleteAsync();
 
-            await _friendHub.NotifyFriendRequestRejected(friendRequest.SenderId);
+            await _hubContext.Clients.Group(friendRequest.SenderId.ToString()).SendAsync("FriendRequestRejected");
+
         }
 
         public async Task<IEnumerable<UserSearchResponse>> SearchUsers(string username)

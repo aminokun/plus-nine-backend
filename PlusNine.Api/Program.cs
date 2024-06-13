@@ -7,7 +7,7 @@ using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using PlusNine.Logic.Interfaces;
 using PlusNine.Logic;
-using PlusNine.Api.Hubs;
+using PlusNine.Logic.Hubs;
 
 var builder = WebApplication.CreateBuilder(args);
 ConfigurationManager configuration = builder.Configuration;
@@ -34,12 +34,12 @@ builder.Services.AddCors(options => {
 });
 
 // Add services to the container.
+builder.Services.AddSignalR();
 builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
-builder.Services.AddSignalR();
 
 builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
 builder.Services.AddHttpContextAccessor();
@@ -47,7 +47,6 @@ builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IObjectiveService, ObjectiveService>();
 builder.Services.AddScoped<IFriendService, FriendService>();
-builder.Services.AddScoped<IFriendHub, FriendHub>();
 
 builder.Services.Configure<AppSettings>(
     builder.Configuration.GetSection("ApplicationSettings"));
