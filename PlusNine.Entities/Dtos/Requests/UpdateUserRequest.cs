@@ -6,13 +6,18 @@ namespace PlusNine.Entities.Dtos.Requests
     {
         [Required]
         public Guid Id { get; set; }
-
         [Required]
-        public string UserName { get; set; }
+        public required string UserName { get; set; }
         [Required]
-        public byte[] PasswordSalt { get; set; }
+        public required string Email { get; set; }
         [Required]
-        public byte[] PasswordHash { get; set; }
+        public required string CustomerId { get; set; }
+        [Required]
+        public required string Role { get; set; }
+        [Required]
+        public required byte[] PasswordSalt { get; set; }
+        [Required]
+        public required byte[] PasswordHash { get; set; }
 
         public string? Token { get; set; }
         public DateTime TokenCreated { get; set; }
