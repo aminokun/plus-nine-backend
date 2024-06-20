@@ -25,10 +25,19 @@ namespace PlusNine.Api.Controllers
             return Ok(userResponses);
         }
 
-        [HttpPost("Request")]
-        public async Task<IActionResult> SendFriendRequest(SendFriendRequestRequest request)
+        [HttpGet("requests")]
+        public async Task<IActionResult> GetFriendRequests()
         {
-            await _friendService.SendFriendRequest(request);
+            var userId = GetUserId();
+            var friendRequests = await _friendService.GetFriendRequests(userId);
+            return Ok(friendRequests);
+        }
+
+        [HttpPost("Request")]
+        public async Task<IActionResult> SendFriendRequest(Guid receiverId)
+        {
+            var userId = GetUserId();
+            await _friendService.SendFriendRequest(userId, receiverId);
             return Ok();
         }
 
@@ -44,6 +53,15 @@ namespace PlusNine.Api.Controllers
         {
             await _friendService.RejectFriendRequest(requestId);
             return Ok();
+        }
+
+        private Guid GetUserId()
+        {
+            var userIdClaim = User.Claims.FirstOrDefault(c => c.Type == "Id");
+            if (string.IsNullOrEmpty(userIdClaim?.Value))
+                throw new UnauthorizedAccessException("User ID not found in claims.");
+
+            return Guid.Parse(userIdClaim?.Value);
         }
     }
 }

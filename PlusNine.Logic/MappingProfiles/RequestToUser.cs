@@ -1,6 +1,7 @@
 ﻿using AutoMapper;
 using PlusNine.Entities.DbSet;
 using PlusNine.Entities.Dtos.Requests;
+using System.Security;
 
 namespace PlusNine.Logic.MappingProfiles
 {
@@ -12,6 +13,7 @@ namespace PlusNine.Logic.MappingProfiles
             CreateMap<CreateUserRequest, User>()
                 .ForMember(dest => dest.Id, opt => opt.MapFrom(src => Guid.NewGuid()))
                 .ForMember(dest => dest.UserName, opt => opt.MapFrom(src => src.UserName))
+                .ForMember(dest => dest.Email, opt => opt.MapFrom(src => src.Email))
                 .ForMember(dest => dest.PasswordHash, opt => opt.Ignore())
                 .ForMember(dest => dest.PasswordSalt, opt => opt.Ignore())
                 .ForMember(dest => dest.Token, opt => opt.Ignore())
@@ -23,6 +25,9 @@ namespace PlusNine.Logic.MappingProfiles
 
             CreateMap<UpdateUserRequest, User>()
                 .ForMember(dest => dest.UserName, opt => opt.MapFrom(src => src.UserName))
+                .ForMember(dest => dest.CustomerId, opt => opt.MapFrom(src => src.CustomerId))
+                .ForMember(dest => dest.Email, opt => opt.MapFrom(src => src.Email))
+                .ForMember(dest => dest.Role, opt => opt.MapFrom(src => src.Role))
                 .ForMember(dest => dest.PasswordHash, opt => opt.Ignore())
                 .ForMember(dest => dest.PasswordSalt, opt => opt.Ignore())
                 .ForMember(dest => dest.Token, opt => opt.Ignore())

@@ -37,10 +37,10 @@ namespace PlusNine.Logic
                 throw new ArgumentException("Passwords don't match");
             }
 
-            var existingUser = await _unitOfWork.User.SingleOrDefaultAsync(u => u.UserName == model.UserName);
+            var existingUser = await _unitOfWork.User.SingleOrDefaultAsync(u => u.UserName == model.UserName && u.Email == model.Email);
             if (existingUser != null)
             {
-                throw new ArgumentException("Username is already taken");
+                throw new ArgumentException("There is already a user with that username or email");
             }
 
             var user = _mapper.Map<User>(model);
@@ -68,6 +68,25 @@ namespace PlusNine.Logic
 
             var tokenResponse = await JWTGenerator(user);
             return tokenResponse;
+        }
+
+        public async Task Logout()
+        {
+            _httpContextAccessor.HttpContext.Response.Cookies.Delete("X-Access-Token", new CookieOptions
+            {
+                HttpOnly = true,
+                Secure = true,
+                SameSite = SameSiteMode.None
+            });
+
+            _httpContextAccessor.HttpContext.Response.Cookies.Delete("X-Refresh-Token", new CookieOptions
+            {
+                HttpOnly = true,
+                Secure = true,
+                SameSite = SameSiteMode.None
+            });
+            
+           await Task.CompletedTask;
         }
 
         public async Task<JwtResponse> RefreshToken()
@@ -107,16 +126,22 @@ namespace PlusNine.Logic
 
         public async Task<GetUserResponse> JwtCheck()
         {
-            var username = GetUsernameFromClaims(); 
-            var Id = GetIdFromClaims(); 
+            var jwtToken = GetJwtTokenFromCookie();
 
+            if (string.IsNullOrEmpty(jwtToken))
+            {
+                throw new UnauthorizedAccessException("JWT token not found");
+            }
+
+            var username = GetUsernameFromClaims();
+            var Id = GetIdFromClaims();
 
             if (string.IsNullOrEmpty(username))
             {
-                throw new UnauthorizedAccessException();
+                throw new UnauthorizedAccessException("Invalid JWT token");
             }
 
-            var user = await _unitOfWork.User.SingleOrDefaultAsync(u => u.Id == Id && u.UserName == username) ?? throw new UnauthorizedAccessException();
+            var user = await _unitOfWork.User.SingleOrDefaultAsync(u => u.Id == Id && u.UserName == username) ?? throw new UnauthorizedAccessException("User not found");
 
             var userResponse = _mapper.Map<GetUserResponse>(user);
             return userResponse;
@@ -133,6 +158,9 @@ namespace PlusNine.Logic
                 Subject = new ClaimsIdentity(new[] { 
                     new Claim("Id", user.Id.ToString()),
                     new Claim("username", user.UserName),
+                    new Claim("email", user.Email),
+                    new Claim("customerId", user.CustomerId),
+                    new Claim(ClaimTypes.Role, user.Role),
                 }),
                 Expires = DateTime.Now.AddDays(1),
                 SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha512Signature)
@@ -219,6 +247,11 @@ namespace PlusNine.Logic
             var IdClaim = _httpContextAccessor.HttpContext.User.Claims.FirstOrDefault(c => c.Type == "Id");
             Guid Id = Guid.Parse(IdClaim?.Value);
             return Id;
+        }
+        private string GetJwtTokenFromCookie()
+        {
+            var jwtToken = _httpContextAccessor.HttpContext.Request.Cookies["X-Access-Token"];
+            return jwtToken;
         }
     }
 }

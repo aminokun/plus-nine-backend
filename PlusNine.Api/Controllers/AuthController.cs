@@ -45,6 +45,13 @@ namespace PlusNine.Api.Controllers
             }
         }
 
+        [HttpPost("Logout")]
+        public async Task<IActionResult> Logout()
+        {
+            await _authService.Logout();
+            return Ok();
+        }
+
         [HttpGet("RefreshToken")]
         public async Task<IActionResult> RefreshToken()
         {
@@ -67,9 +74,9 @@ namespace PlusNine.Api.Controllers
                 var userResponse = await _authService.JwtCheck();
                 return Ok(userResponse);
             }
-            catch (UnauthorizedAccessException)
+            catch (UnauthorizedAccessException ex)
             {
-                return Unauthorized();
+                return Unauthorized(ex.Message);
             }
         }
 
