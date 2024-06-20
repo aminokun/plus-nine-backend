@@ -22,13 +22,45 @@ namespace PlusNine.DataService.Repositories
                     .Select(x => new User
                     {
                         Id = x.Id,
-                        UserName = x.UserName
+                        UserName = x.UserName,
+                        Role = x.Role,
+                        Email = x.Email,
                     })
                     .FirstOrDefaultAsync();
 
                 if (user == null)
                 {
                     _logger.LogWarning("User with ID {UserId} not found.", userId);
+                    return null;
+                }
+
+                return user;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "{Repo} GetByIdAsync Function Error", typeof(UserRepository));
+                throw;
+            }
+        }
+
+        public async Task<User> GetByCustomerIdAsync(string customerId)
+        {
+            try
+            {
+                var user = await _dbSet.Where(x => x.CustomerId == customerId)
+                    .Where(x => x.Status == 1)
+                    .Select(x => new User
+                    {
+                        Id = x.Id,
+                        UserName = x.UserName,
+                        Role = x.Role,
+                        Email = x.Email,
+                    })
+                    .FirstOrDefaultAsync();
+
+                if (user == null)
+                {
+                    _logger.LogWarning("User with ID {UserId} not found.", customerId);
                     return null;
                 }
 
@@ -112,6 +144,9 @@ namespace PlusNine.DataService.Repositories
                 }
 
                 existingUser.UserName = user.UserName;
+                existingUser.UserName = user.Email;
+                existingUser.UserName = user.Role;
+                existingUser.UserName = user.CustomerId;
                 existingUser.Token = user.Token;
                 existingUser.TokenCreated = user.TokenCreated;
                 existingUser.TokenExpires = user.TokenExpires;

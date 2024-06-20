@@ -5,14 +5,16 @@ namespace PlusNine.Entities.Dtos.Requests
     public class CreateUserRequest
     {
         [Required]
-        public string UserName { get; set; }
+        public required string UserName { get; set; }
+        [Required]
+        public required string Email { get; set; }
 
         [Required]
         [MinLength(6)]
-        public string Password { get; set; }
+        public required string Password { get; set; }
 
         [Required]
         [Compare("Password")]
-        public string ConfirmPassword { get; set; }
+        public required string ConfirmPassword { get; set; }
     }
 }

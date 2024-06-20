@@ -7,7 +7,9 @@ using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using PlusNine.Logic.Interfaces;
 using PlusNine.Logic;
+using PlusNine.Logic.Models;
 using PlusNine.Logic.Hubs;
+using Stripe;
 
 var builder = WebApplication.CreateBuilder(args);
 ConfigurationManager configuration = builder.Configuration;
@@ -26,13 +28,15 @@ builder.Services.AddCors(options => {
     // React
     options.AddPolicy("reactapp", policyBuilder =>
     {
-        policyBuilder.WithOrigins(allowedOrigins);
+        //policyBuilder.WithOrigins(allowedOrigins);
+        policyBuilder.AllowAnyOrigin();
         policyBuilder.AllowAnyHeader();
         policyBuilder.AllowAnyMethod();
-        policyBuilder.AllowCredentials();
+        //policyBuilder.AllowCredentials();
     });
 });
 
+builder.Services.AddMvc().AddNewtonsoftJson();
 // Add services to the container.
 builder.Services.AddSignalR();
 builder.Services.AddControllers();
@@ -40,11 +44,18 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
+//stripe
+builder.Services.Configure<StripeModel>(builder.Configuration.GetSection("Stripe"));
+builder.Services.AddScoped<CustomerService>();
+builder.Services.AddScoped<ProductService>();
+builder.Services.AddScoped<TokenService>();
+builder.Services.AddScoped<ChargeService>();
 
 builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 builder.Services.AddScoped<IAuthService, AuthService>();
+builder.Services.AddScoped<StripeService>();
 builder.Services.AddScoped<IObjectiveService, ObjectiveService>();
 builder.Services.AddScoped<IFriendService, FriendService>();
 
@@ -92,11 +103,14 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
+
 app.UseCors("reactapp");
 
 app.UseAuthentication();
 
 app.UseAuthorization();
+
+app.UseRouting();
 
 app.MapControllers();
 

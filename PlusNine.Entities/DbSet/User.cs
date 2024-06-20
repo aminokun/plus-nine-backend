@@ -5,7 +5,14 @@ namespace PlusNine.Entities.DbSet
     public class User : BaseEntity
     {
         [Required]
-        public string UserName { get; set; }
+        public required string UserName { get; set; }
+        [Required]
+        public required string Email { get; set; }
+        [Required]
+        public string CustomerId { get; set; }
+        [Required]
+        public required string Role { get; set; } = "Member";
+
         [Required]
         public byte[] PasswordSalt { get; set; }
         [Required]

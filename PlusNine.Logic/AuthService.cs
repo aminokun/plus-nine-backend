@@ -37,10 +37,10 @@ namespace PlusNine.Logic
                 throw new ArgumentException("Passwords don't match");
             }
 
-            var existingUser = await _unitOfWork.User.SingleOrDefaultAsync(u => u.UserName == model.UserName);
+            var existingUser = await _unitOfWork.User.SingleOrDefaultAsync(u => u.UserName == model.UserName && u.Email == model.Email);
             if (existingUser != null)
             {
-                throw new ArgumentException("Username is already taken");
+                throw new ArgumentException("There is already a user with that username or email");
             }
 
             var user = _mapper.Map<User>(model);
@@ -158,6 +158,9 @@ namespace PlusNine.Logic
                 Subject = new ClaimsIdentity(new[] { 
                     new Claim("Id", user.Id.ToString()),
                     new Claim("username", user.UserName),
+                    new Claim("email", user.Email),
+                    new Claim("customerId", user.CustomerId),
+                    new Claim(ClaimTypes.Role, user.Role),
                 }),
                 Expires = DateTime.Now.AddDays(1),
                 SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha512Signature)
