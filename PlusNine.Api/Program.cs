@@ -28,11 +28,10 @@ builder.Services.AddCors(options => {
     // React
     options.AddPolicy("reactapp", policyBuilder =>
     {
-        //policyBuilder.WithOrigins(allowedOrigins);
-        policyBuilder.AllowAnyOrigin();
+        policyBuilder.WithOrigins(allowedOrigins);
         policyBuilder.AllowAnyHeader();
         policyBuilder.AllowAnyMethod();
-        //policyBuilder.AllowCredentials();
+        policyBuilder.AllowCredentials();
     });
 });
 
