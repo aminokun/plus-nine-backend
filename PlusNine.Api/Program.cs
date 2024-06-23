@@ -21,7 +21,7 @@ var allowedOrigins = builder.Configuration
     .ToArray() ?? Array.Empty<string>();
 
 builder.Services.AddDbContext<AppDbContext>(options =>
-    options.UseMySQL(builder.Configuration.GetConnectionString("DefaultConnection")));
+    options.UseMySQL(builder.Configuration.GetConnectionString("DefaultConnection") ?? throw new InvalidOperationException("Connection string 'DefaultConnection' not found.")));
 
 builder.Services.AddCors(options => {
 
