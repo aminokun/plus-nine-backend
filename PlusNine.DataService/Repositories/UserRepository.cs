@@ -144,9 +144,9 @@ namespace PlusNine.DataService.Repositories
                 }
 
                 existingUser.UserName = user.UserName;
-                existingUser.UserName = user.Email;
-                existingUser.UserName = user.Role;
-                existingUser.UserName = user.CustomerId;
+                existingUser.Email = user.Email;
+                existingUser.Role = user.Role;
+                existingUser.CustomerId = user.CustomerId;
                 existingUser.Token = user.Token;
                 existingUser.TokenCreated = user.TokenCreated;
                 existingUser.TokenExpires = user.TokenExpires;

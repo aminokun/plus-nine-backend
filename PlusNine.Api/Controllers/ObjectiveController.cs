@@ -44,6 +44,15 @@ namespace PlusNine.Api.Controllers
         }
 
         [Authorize]
+        [HttpGet("Completed")]
+        public async Task<IActionResult> GetCompletedObjectives()
+        {
+            var userId = GetUserId();
+            var objectives = await _objectiveService.GetCompletedObjectives(userId);
+            return Ok(objectives);
+        }
+
+        [Authorize]
         [HttpPost("")]
         public async Task<IActionResult> AddObjective([FromBody] CreateObjectiveRequest objective)
         {

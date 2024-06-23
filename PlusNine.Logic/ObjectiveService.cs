@@ -33,7 +33,7 @@ namespace PlusNine.Logic
         public async Task<IEnumerable<GetObjectiveResponse>> GetAllObjectives(Guid userId)
         {
             var objectives = await _unitOfWork.Objectives.All();
-            var userObjectives = objectives.Where(o => o.UserId == userId);
+            var userObjectives = objectives.Where(o => o.UserId == userId && o.Completed == false);
             return _mapper.Map<IEnumerable<GetObjectiveResponse>>(userObjectives);
         }
 
@@ -46,6 +46,13 @@ namespace PlusNine.Logic
             await _unitOfWork.CompleteAsync();
 
             return result;
+        }
+
+        public async Task<IEnumerable<GetObjectiveResponse>> GetCompletedObjectives(Guid userId)
+        {
+            var objectives = await _unitOfWork.Objectives.All();
+            var userObjectives = objectives.Where(o => o.UserId == userId && o.Completed == true);
+            return _mapper.Map<IEnumerable<GetObjectiveResponse>>(userObjectives);
         }
 
 

@@ -10,11 +10,6 @@ namespace PlusNine.Logic.MappingProfiles
         {
             CreateMap<CreateObjectiveRequest, Objective>()
                 .ForMember(
-                    dest => dest.UserId,
-                opt => opt
-                    .MapFrom(src => src.UserId)
-                )
-                .ForMember(
                     dest => dest.Status,
                 opt => opt
                     .MapFrom(src => 1)
