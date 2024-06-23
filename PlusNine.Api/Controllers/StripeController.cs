@@ -29,8 +29,9 @@ namespace PlusNine.Api.Controllers
 
         [Authorize]
         [HttpPost("Pay")]
-        public IActionResult Pay([FromBody] string priceId)
+        public IActionResult Pay([FromBody] Pay model)
         {
+            string priceId = model.PriceId;
             string customerId = GetCustomerIdFromClaims();
             var session = _stripeService.CreateCheckoutSession(priceId, customerId);
             return Ok(session.Url);

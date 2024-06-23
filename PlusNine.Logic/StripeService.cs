@@ -102,6 +102,7 @@ namespace PlusNine.Logic
             if (user != null)
             {
                 user.Role = role;
+                user.CustomerId = customerId;
                 await _unitOfWork.User.Update(user);
                 await _unitOfWork.CompleteAsync();
             }

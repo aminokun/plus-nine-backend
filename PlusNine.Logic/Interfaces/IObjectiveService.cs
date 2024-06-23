@@ -1,6 +1,7 @@
 ﻿using PlusNine.Entities.DbSet;
 using PlusNine.Entities.Dtos.Requests;
 using PlusNine.Entities.Dtos.Responses;
+using PlusNine.Logic.Models;
 
 namespace PlusNine.Logic.Interfaces
 {
@@ -12,5 +13,6 @@ namespace PlusNine.Logic.Interfaces
         Task<Objective> AddObjective(CreateObjectiveRequest objective, Guid userId);
         Task UpdateObjective(UpdateObjectiveRequest objective, Guid userId);
         Task DeleteObjective(Guid objectiveId, Guid userId);
+        Task<IEnumerable<ActivityCalendarEntry>> GetCompletedObjectivesActivityCalendar(Guid userId, DateTime startDate, DateTime endDate);
     }
 }
