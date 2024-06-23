@@ -2,8 +2,10 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using PlusNine.DataService.Repositories.Interfaces;
+using PlusNine.Entities.DbSet;
 using PlusNine.Entities.Dtos.Requests;
 using PlusNine.Logic.Interfaces;
+using PlusNine.Logic.Models;
 
 namespace PlusNine.Api.Controllers
 {
@@ -40,6 +42,15 @@ namespace PlusNine.Api.Controllers
         {
             var userId = GetUserId();
             var objectives = await _objectiveService.GetAllObjectives(userId);
+            return Ok(objectives);
+        }
+
+        [Authorize]
+        [HttpGet("Completed")]
+        public async Task<IActionResult> GetCompletedObjectives()
+        {
+            var userId = GetUserId();
+            var objectives = await _objectiveService.GetCompletedObjectives(userId);
             return Ok(objectives);
         }
 
@@ -82,6 +93,18 @@ namespace PlusNine.Api.Controllers
             {
                 return NotFound(ex.Message);
             }
+        }
+
+        [Authorize]
+        [HttpPost]
+        [Route("Activity")]
+        public async Task<IEnumerable<ActivityCalendarEntry>> GetCompletedObjectivesActivityCalendar([FromBody] CreateActivityCalendar activities)
+        {
+            DateTime startDate = activities.StartDate;
+            DateTime endDate = activities.EndDate;
+            var userId = GetUserId();
+            var result = await _objectiveService.GetCompletedObjectivesActivityCalendar(userId, startDate, endDate);
+            return result;
         }
 
         private Guid GetUserId()

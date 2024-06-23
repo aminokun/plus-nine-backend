@@ -4,6 +4,7 @@ using PlusNine.Entities.DbSet;
 using PlusNine.Entities.Dtos.Requests;
 using PlusNine.Entities.Dtos.Responses;
 using PlusNine.Logic.Interfaces;
+using PlusNine.Logic.Models;
 
 namespace PlusNine.Logic
 {
@@ -33,7 +34,7 @@ namespace PlusNine.Logic
         public async Task<IEnumerable<GetObjectiveResponse>> GetAllObjectives(Guid userId)
         {
             var objectives = await _unitOfWork.Objectives.All();
-            var userObjectives = objectives.Where(o => o.UserId == userId);
+            var userObjectives = objectives.Where(o => o.UserId == userId && o.Completed == false);
             return _mapper.Map<IEnumerable<GetObjectiveResponse>>(userObjectives);
         }
 
@@ -46,6 +47,13 @@ namespace PlusNine.Logic
             await _unitOfWork.CompleteAsync();
 
             return result;
+        }
+
+        public async Task<IEnumerable<GetObjectiveResponse>> GetCompletedObjectives(Guid userId)
+        {
+            var objectives = await _unitOfWork.Objectives.All();
+            var userObjectives = objectives.Where(o => o.UserId == userId && o.Completed == true);
+            return _mapper.Map<IEnumerable<GetObjectiveResponse>>(userObjectives);
         }
 
 
@@ -72,5 +80,66 @@ namespace PlusNine.Logic
             await _unitOfWork.Objectives.Delete(objectiveId);
             await _unitOfWork.CompleteAsync();
         }
+
+        public async Task<IEnumerable<ActivityCalendarEntry>> GetCompletedObjectivesActivityCalendar(Guid userId, DateTime startDate, DateTime endDate)
+        {
+            var objectives = await _unitOfWork.Objectives.All();
+            var userCompletedObjectives = objectives
+                .Where(o => o.UserId == userId && o.Completed && o.AddedDate >= startDate && o.AddedDate <= endDate)
+                .ToList();
+
+            var calendarData = new List<ActivityCalendarEntry>();
+
+            var dateCounts = new Dictionary<string, int>();
+
+            foreach (var obj in userCompletedObjectives)
+            {
+                var date = obj.AddedDate.ToString("yyyy-MM-dd");
+                if (dateCounts.ContainsKey(date))
+                {
+                    dateCounts[date]++;
+                }
+                else
+                {
+                    dateCounts[date] = 1;
+                }
+            }
+
+            int maxCount = dateCounts.Values.DefaultIfEmpty(0).Max();
+
+            foreach (var date in EachDay(startDate, endDate))
+            {
+                var dateString = date.ToString("yyyy-MM-dd");
+                dateCounts.TryGetValue(dateString, out int count);
+                int level = CalculateLevel(count, maxCount);
+
+                calendarData.Add(new ActivityCalendarEntry
+                {
+                    Count = count,
+                    Date = dateString,
+                    Level = level
+                });
+            }
+
+            return calendarData;
+        }
+
+        private int CalculateLevel(int count, int maxCount)
+        {
+            if (maxCount == 0) return 0;
+            double proportion = (double)count / maxCount;
+            if (proportion > 0.75) return 4;
+            if (proportion > 0.5) return 3;
+            if (proportion > 0.25) return 2;
+            if (proportion > 0) return 1;
+            return 0;
+        }
+
+        private IEnumerable<DateTime> EachDay(DateTime from, DateTime to)
+        {
+            for (var day = from.Date; day <= to.Date; day = day.AddDays(1))
+                yield return day;
+        }
+
     }
 }

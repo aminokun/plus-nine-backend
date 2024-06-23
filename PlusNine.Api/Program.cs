@@ -21,7 +21,7 @@ var allowedOrigins = builder.Configuration
     .ToArray() ?? Array.Empty<string>();
 
 builder.Services.AddDbContext<AppDbContext>(options =>
-    options.UseMySQL(builder.Configuration.GetConnectionString("DefaultConnection")));
+    options.UseMySQL(builder.Configuration.GetConnectionString("DefaultConnection") ?? throw new InvalidOperationException("Connection string 'DefaultConnection' not found.")));
 
 builder.Services.AddCors(options => {
 
@@ -102,14 +102,13 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
-
 app.UseCors("reactapp");
+
+app.UseRouting();
 
 app.UseAuthentication();
 
 app.UseAuthorization();
-
-app.UseRouting();
 
 app.MapControllers();
 

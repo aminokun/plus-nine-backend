@@ -3,6 +3,7 @@ using PlusNine.DataService.Repositories.Interfaces;
 using PlusNine.Logic.Models;
 using Stripe;
 using Stripe.Checkout;
+using System.Runtime.InteropServices;
 
 namespace PlusNine.Logic
 {
@@ -26,7 +27,7 @@ namespace PlusNine.Logic
             StripeConfiguration.ApiKey = _model.SecretKey;
         }
 
-        public Session CreateCheckoutSession(string priceId)
+        public Session CreateCheckoutSession(string priceId, string customerId)
         {
             var options = new SessionCreateOptions
             {
@@ -43,6 +44,8 @@ namespace PlusNine.Logic
                 CancelUrl = "http://localhost:3000/"
             };
 
+            options.Customer = customerId;
+
             var service = new SessionService();
             Session session = service.Create(options);
             return session;
@@ -55,8 +58,29 @@ namespace PlusNine.Logic
                 Email = email,
                 Name = username
             };
-            var customer = await _customerService.CreateAsync(customerOptions);
-            return customer;
+
+            var options = new CustomerSearchOptions
+            {
+                Query = $"name:'{username}'",
+            };
+
+            var customerService = new CustomerService();
+            var existingCustomer = customerService.Search(options);
+
+            if (!existingCustomer.Data.Any())
+            {
+                var customer = await _customerService.CreateAsync(customerOptions);
+                var user = await _unitOfWork.User.SingleOrDefaultAsync(u => u.UserName == username && u.Email == email);
+
+                user.CustomerId = customer.Id;
+
+                await _unitOfWork.User.Update(user);
+                await _unitOfWork.CompleteAsync();
+                return customer;
+            }
+
+            return customerService.Get(existingCustomer.Data.First().Id);
+
         }
 
         public StripeList<Product> GetAllProducts()
@@ -78,6 +102,7 @@ namespace PlusNine.Logic
             if (user != null)
             {
                 user.Role = role;
+                user.CustomerId = customerId;
                 await _unitOfWork.User.Update(user);
                 await _unitOfWork.CompleteAsync();
             }

@@ -29,19 +29,22 @@ namespace PlusNine.Api.Controllers
 
         [Authorize]
         [HttpPost("Pay")]
-        public async Task<IActionResult> Pay([FromBody] string priceId)
+        public IActionResult Pay([FromBody] Pay model)
         {
-            var session = _stripeService.CreateCheckoutSession(priceId);
+            string priceId = model.PriceId;
+            string customerId = GetCustomerIdFromClaims();
+            var session = _stripeService.CreateCheckoutSession(priceId, customerId);
             return Ok(session.Url);
         }
 
         [Authorize]
         [HttpPost("CreateCustomer")]
-        public async Task<IActionResult> CreateCustomer()
+        public async Task<dynamic> CreateCustomer()
         {
             string username = GetUsernameFromClaims();
             string email = GetEmailFromClaims();
             var customer = await _stripeService.CreateCustomer(username, email);
+
             return Ok(new { customer });
         }
 
@@ -77,6 +80,12 @@ namespace PlusNine.Api.Controllers
             return usernameClaim?.Value;
         }
 
+        private string GetCustomerIdFromClaims()
+        {
+            var customerIdClaim = HttpContext.User.Claims.FirstOrDefault(c => c.Type == "customerId");
+            return customerIdClaim?.Value;
+        }
+
         private Guid GetIdFromClaims()
         {
             var idClaim = HttpContext.User.Claims.FirstOrDefault(c => c.Type == "Id");
@@ -86,7 +95,7 @@ namespace PlusNine.Api.Controllers
 
         private string GetEmailFromClaims()
         {
-            var emailClaim = HttpContext.User.Claims.FirstOrDefault(c => c.Type == "email");
+            var emailClaim = HttpContext.User.Claims.FirstOrDefault(c => c.Type == "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress");
             return emailClaim?.Value;
         }
     }

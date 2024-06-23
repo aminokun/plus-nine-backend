@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using PlusNine.DataService.Repositories.Interfaces;
 using PlusNine.Logic.Interfaces;
 using PlusNine.Entities.Dtos.Requests;
+using Microsoft.AspNetCore.Authorization;
 
 namespace PlusNine.Api.Controllers
 {
@@ -18,41 +19,122 @@ namespace PlusNine.Api.Controllers
             _friendService = friendService;
         }
 
+        [Authorize]
         [HttpGet("Search")]
         public async Task<IActionResult> SearchUsers(string username)
         {
-            var userResponses = await _friendService.SearchUsers(username);
-            return Ok(userResponses);
+            try
+            {
+                var userResponses = await _friendService.SearchUsers(username);
+                return Ok(userResponses);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+        }
+ 
+        [Authorize]
+        [HttpGet("GetFriends")]
+        public async Task<IActionResult> GetFriends()
+        {
+            try
+            {
+                var userId = GetUserId();
+                var friendShips = await _friendService.GetFriends(userId);
+                return Ok(friendShips);
+            }
+            catch (UnauthorizedAccessException ex)
+            {
+                return Unauthorized(new { message = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
         }
 
-        [HttpGet("requests")]
+        [Authorize]
+        [HttpGet("IncommingRequests")]
         public async Task<IActionResult> GetFriendRequests()
         {
-            var userId = GetUserId();
-            var friendRequests = await _friendService.GetFriendRequests(userId);
-            return Ok(friendRequests);
+            try
+            {
+                var userId = GetUserId();
+                var friendRequests = await _friendService.GetFriendRequests(userId);
+                return Ok(friendRequests);
+            }
+            catch (UnauthorizedAccessException ex)
+            {
+                return Unauthorized(new { message = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
         }
 
-        [HttpPost("Request")]
+
+        [Authorize]
+        [HttpPost("SendRequest")]
         public async Task<IActionResult> SendFriendRequest(Guid receiverId)
         {
-            var userId = GetUserId();
-            await _friendService.SendFriendRequest(userId, receiverId);
-            return Ok();
+            try
+            {
+                var userId = GetUserId();
+                await _friendService.SendFriendRequest(userId, receiverId);
+                return Ok();
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+            catch (UnauthorizedAccessException ex)
+            {
+                return Unauthorized(new { message = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
         }
 
+        [Authorize]
         [HttpPut("Accept/{requestId}")]
         public async Task<IActionResult> AcceptFriendRequest(Guid requestId)
         {
-            await _friendService.AcceptFriendRequest(requestId);
-            return Ok();
+            try
+            {
+                await _friendService.AcceptFriendRequest(requestId);
+                return Ok();
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
         }
 
+        [Authorize]
         [HttpPut("Reject/{requestId}")]
         public async Task<IActionResult> RejectFriendRequest(Guid requestId)
         {
-            await _friendService.RejectFriendRequest(requestId);
-            return Ok();
+            try
+            {
+                await _friendService.RejectFriendRequest(requestId);
+                return Ok();
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
         }
 
         private Guid GetUserId()

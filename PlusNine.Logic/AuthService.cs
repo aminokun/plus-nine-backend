@@ -40,7 +40,7 @@ namespace PlusNine.Logic
             var existingUser = await _unitOfWork.User.SingleOrDefaultAsync(u => u.UserName == model.UserName && u.Email == model.Email);
             if (existingUser != null)
             {
-                throw new ArgumentException("There is already a user with that username or email");
+                throw new ArgumentException("There is already a user with that usrname or email");
             }
 
             var user = _mapper.Map<User>(model);
@@ -153,15 +153,26 @@ namespace PlusNine.Logic
             var tokenHandler = new JwtSecurityTokenHandler();
             var key = Encoding.ASCII.GetBytes(_applicationSettings.Secret);
 
+            var claims = new List<Claim>
+            {
+                new Claim("Id", user.Id.ToString()),
+                new Claim("username", user.UserName),
+                new Claim("email", user.Email),
+                new Claim(ClaimTypes.Role, user.Role),
+            };
+
+            if (user.CustomerId != null)
+            {
+                claims.Add(new Claim("customerId", user.CustomerId.ToString()));
+            }
+            else
+            {
+                claims.Add(new Claim("customerId", string.Empty));
+            }
+
             var tokenDescriptor = new SecurityTokenDescriptor
             {
-                Subject = new ClaimsIdentity(new[] { 
-                    new Claim("Id", user.Id.ToString()),
-                    new Claim("username", user.UserName),
-                    new Claim("email", user.Email),
-                    new Claim("customerId", user.CustomerId),
-                    new Claim(ClaimTypes.Role, user.Role),
-                }),
+                Subject = new ClaimsIdentity(claims),
                 Expires = DateTime.Now.AddDays(1),
                 SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha512Signature)
             };
@@ -177,9 +188,13 @@ namespace PlusNine.Logic
             return new JwtResponse
             {
                 Token = encryptedToken,
-                Username = user.UserName
+                Username = user.UserName,
+                Email = user.Email,
+                CustomerId = user.CustomerId,
+                Role = user.Role
             };
         }
+
 
         private static RefreshToken GenerateRefreshToken()
         {
